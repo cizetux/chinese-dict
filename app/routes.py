@@ -2,8 +2,17 @@ from fastapi import APIRouter
 from sqlalchemy.orm import Session
 from .database import SessionLocal
 from .models import Word, Meaning, Example
+import unicodedata
 
 router = APIRouter()
+
+def normalize_pinyin(text: str):
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(
+        char for char in text
+        if unicodedata.category(char) != "Mn"
+    )
+    return text.lower()
 
 
 # =========================
@@ -125,12 +134,42 @@ def create_example(
 def search_words(q: str):
     db: Session = SessionLocal()
 
-    words = db.query(Word).join(Meaning).filter(
-        (Word.hanzi.contains(q)) |
-        (Word.pinyin.contains(q)) |
-        (Meaning.english.contains(q))
-    ).all()
+    words = db.query(Word).all()
+
+    q_normalized = normalize_pinyin(q)
+
+    result = []
+
+    for word in words:
+        pinyin_normalized = normalize_pinyin(word.pinyin)
+
+        matches = (
+            q.lower() in word.hanzi.lower()
+            or q_normalized in pinyin_normalized
+            or any(q.lower() in meaning.english.lower()
+                   for meaning in word.meanings)
+        )
+
+        if matches:
+            result.append({
+                "id": word.id,
+                "hanzi": word.hanzi,
+                "pinyin": word.pinyin,
+                "hsk_level": word.hsk_level,
+                "meanings": [
+                    meaning.english
+                    for meaning in word.meanings
+                ],
+                "examples": [
+                    {
+                        "hanzi": example.hanzi,
+                        "pinyin": example.pinyin,
+                        "english": example.english
+                    }
+                    for example in word.examples
+                ]
+            })
 
     db.close()
 
-    return words
+    return result

@@ -1,0 +1,45 @@
+body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 0 20px;
+}
+
+h1 {
+    text-align: center;
+}
+
+input {
+    width: 70%;
+    padding: 12px;
+    font-size: 16px;
+}
+
+button {
+    padding: 12px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.result {
+    margin-top: 25px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.result h2 {
+    font-size: 40px;
+    margin-bottom: 5px;
+}
+
+.pinyin {
+    font-size: 20px;
+}
+
+.example {
+    padding: 10px;
+    margin-top: 10px;
+    background: #f5f5f5;
+    border-radius: 6px;
+}
