@@ -2,3 +2,4 @@ chinese_dict.db
 __pycache__/
 .venv/
 .env
+delete_test.py
