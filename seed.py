@@ -49,32 +49,61 @@ words = [
 
 
 for data in words:
-
-    word = Word(
-        hanzi=data["hanzi"],
-        pinyin=data["pinyin"],
-        hsk_level=data["hsk_level"]
+    word = (
+        db.query(Word)
+        .filter(Word.hanzi == data["hanzi"])
+        .first()
     )
 
-    word.meanings = [
-        Meaning(english=meaning)
-        for meaning in data["meanings"]
-    ]
-
-    word.examples = [
-        Example(
-            hanzi=example["hanzi"],
-            pinyin=example["pinyin"],
-            english=example["english"]
+    if word is None:
+        word = Word(
+            hanzi=data["hanzi"],
+            pinyin=data["pinyin"],
+            hsk_level=data["hsk_level"]
         )
-        for example in data["examples"]
-    ]
+        db.add(word)
+        print(f"New word: {data['hanzi']}")
+    else:
+        word.pinyin = data["pinyin"]
+        word.hsk_level = data["hsk_level"]
+        print(f"Updated word: {data['hanzi']}")
 
-    db.add(word)
+    existing_meanings = {
+        meaning.english
+        for meaning in word.meanings
+    }
 
+    for meaning in data["meanings"]:
+        if meaning not in existing_meanings:
+            word.meanings.append(
+                Meaning(english=meaning)
+            )
+
+    existing_examples = {
+        (
+            example.hanzi,
+            example.pinyin,
+            example.english
+        )
+        for example in word.examples
+    }
+
+    for example in data["examples"]:
+        example_key = (
+            example["hanzi"],
+            example["pinyin"],
+            example["english"]
+        )
+
+        if example_key not in existing_examples:
+            word.examples.append(
+                Example(
+                    hanzi=example["hanzi"],
+                    pinyin=example["pinyin"],
+                    english=example["english"]
+                )
+            )
 
 db.commit()
-
-print("Words imported successfully!")
-
+print("Import completed successfully!")
 db.close()
